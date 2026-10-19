@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Data Extractor // CyberCore</title>
+  <!-- Google Fonts: Space Grotesk & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            cyber: {
+              bg: '#080c14',
+              surface: 'rgba(15, 23, 42, 0.65)',
+              border: 'rgba(56, 189, 248, 0.15)',
+              neonBlue: '#38bdf8',
+              neonPurple: '#a855f7',
+              neonGreen: '#10b981',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Subtle Cyber Grid Background */
+    body {
+      background-color: #06090f;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.15), transparent),
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+    }
+    /* Custom Scrollbar Futuristik */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+  </style>
+</head>
+<body class="text-slate-200 min-h-screen p-4 md:p-8 font-sans selection:bg-cyan-500 selection:text-black">
+  <div class="max-w-6xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <header class="relative overflow-hidden bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-cyan-500/20 shadow-[0_0_30px_-10px_rgba(56,189,248,0.15)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="absolute -right-12 -top-12 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_#38bdf8] animate-pulse"></span>
+          <span class="text-xs uppercase tracking-widest text-cyan-400 font-mono font-bold">System v.1.0</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-cyan-400 tracking-tight mt-1">
+          Parser WhatsApp Inquiry
+        </h1>
+        <p class="text-slate-400 text-sm font-mono mt-0.5">
+          Workspace: <span class="text-slate-300 font-medium">PT. Malas Kerja</span>
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="px-4 py-2 rounded-xl bg-slate-800/80 border border-slate-700/60 shadow-inner flex items-center gap-2.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+          <span id="recordCount" class="text-xs font-mono font-semibold text-slate-300">
+            0 Data Tersimpan
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Input Section -->
+    <section class="bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-slate-800/80 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <label for="rawText" class="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-2">
+          <span class="text-cyan-400">❯</span> Paste Raw WhatsApp Payload
+        </label>
+        <button id="btnSample" class="text-xs font-mono text-cyan-400 hover:text-cyan-300 transition underline underline-offset-4 flex items-center gap-1">
+          ⚡ Contoh Chat
+        </button>
+      </div>
+
+      <div class="relative">
+        <textarea
+          id="rawText"
+          rows="8"
+          placeholder="Paste seluruh teks WhatsApp dari client di sini..."
+          class="w-full p-4 bg-slate-950/70 border border-slate-800 rounded-xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 focus:outline-none font-mono text-sm leading-relaxed text-slate-200 placeholder-slate-600 transition shadow-inner"
+        ></textarea>
+      </div>
+
+      <div class="flex flex-wrap gap-3 pt-1">
+        <button
+          id="btnParse"
+          class="relative group overflow-hidden bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition duration-300 flex items-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_25px_rgba(56,189,248,0.5)] cursor-pointer"
+        >
+          <span class="text-base">⚡</span> Ekstrak & Tambah
+        </button>
+        <button
+          id="btnClearInput"
+          class="bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 font-medium px-4 py-2.5 rounded-xl transition border border-slate-700/60 hover:text-white cursor-pointer text-sm"
+        >
+          Bersihkan Input
+        </button>
+      </div>
+
+      <!-- Alert Box -->
+      <div id="errorAlert" class="hidden p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-sm font-mono flex items-center gap-3">
+        <span class="text-rose-400 text-base">⚠️</span>
+        <span id="errorMessage"></span>
+      </div>
+    </section>
+
+    <!-- Result Table Section -->
+    <section id="resultSection" class="hidden bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-cyan-500/20 shadow-2xl space-y-5 animate-fadeIn">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span class="text-cyan-400">❖</span> Rekap Database Client
+          </h2>
+          <p class="text-xs text-slate-500 font-mono mt-0.5">Live Data Matrix Engine</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            id="btnCopyExcel"
+            class="bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-mono font-medium px-4 py-2.5 rounded-lg transition border border-slate-700/70 hover:border-cyan-500/40 shadow-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            📋 Copy Excel
+          </button>
+          <button
+            id="btnDownloadCsv"
+            class="bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-mono font-semibold px-4 py-2.5 rounded-lg transition shadow-[0_0_15px_rgba(16,185,129,0.25)] flex items-center gap-1.5 cursor-pointer"
+          >
+            📥 Unduh CSV
+          </button>
+          <button
+            id="btnResetAll"
+            class="bg-rose-950/30 hover:bg-rose-900/50 text-rose-400 text-xs font-mono font-medium px-4 py-2.5 rounded-lg transition border border-rose-800/40 cursor-pointer"
+          >
+            Reset Semua
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800/80 shadow-2xl bg-slate-950/60">
+        <table class="w-full text-left text-xs whitespace-nowrap font-mono">
+          <thead class="bg-slate-900/90 text-cyan-400/90 tracking-wider uppercase font-semibold border-b border-slate-800">
+            <tr>
+              <th class="p-3.5">#</th>
+              <th class="p-3.5">Nama</th>
+              <th class="p-3.5">Perusahaan</th>
+              <th class="p-3.5">Kota</th>
+              <th class="p-3.5">Email</th>
+              <th class="p-3.5">Grade</th>
+              <th class="p-3.5">Dimensi</th>
+              <th class="p-3.5">Qty</th>
+              <th class="p-3.5">Country of Origin</th>
+              <th class="p-3.5">Delivery Time</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-300">
+            <!-- Data baris akan masuk ke sini via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const rawTextEl = document.getElementById('rawText');
+    const btnParse = document.getElementById('btnParse');
+    const btnClearInput = document.getElementById('btnClearInput');
+    const btnSample = document.getElementById('btnSample');
+    const resultSection = document.getElementById('resultSection');
+    const tableBody = document.getElementById('tableBody');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const recordCountEl = document.getElementById('recordCount');
+    const btnCopyExcel = document.getElementById('btnCopyExcel');
+    const btnDownloadCsv = document.getElementById('btnDownloadCsv');
+    const btnResetAll = document.getElementById('btnResetAll');
+
+    // List header kolom
+    const HEADERS = [
+      'Nama',
+      'Perusahaan',
+      'Kota',
+      'Email',
+      'Grade',
+      'Dimensi',
+      'Qty',
+      'Country of Origin',
+      'Delivery Time'
+    ];
+
+    let dataset = [];
+
+    // Fungsi ekstraksi regex aman
+    function extractField(text, fieldName) {
+      const regex = new RegExp(`(?:^|\\n)\\s*\\*?${fieldName}\\*?\\s*:\\s*(.*?)(?=\\n\\s*\\*?[A-Za-z\\s]+?\\*?\\s*:|\\n\\s*Kami akan segera|\\n\\s*\\*Kebutuhan\\*|$)`, 'is');
+      const match = text.match(regex);
+      if (match && match[1]) {
+        let val = match[1].trim();
+        val = val.replace(/^\*+|\*+$/g, '').trim();
+        return val || '-';
+      }
+      return '-';
+    }
+
+    btnParse.addEventListener('click', () => {
+      const raw = rawTextEl.value.trim();
+      errorAlert.classList.add('hidden');
+
+      if (!raw) {
+        showError('Belum ada yang lu paste goblok!');
+        return;
+      }
+
+      try {
+        const cleanText = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        const rowData = {
+          'Nama': extractField(cleanText, 'Nama'),
+          'Perusahaan': extractField(cleanText, 'Perusahaan'),
+          'Kota': extractField(cleanText, 'Kota'),
+          'Email': extractField(cleanText, 'Email'),
+          'Grade': extractField(cleanText, 'Grade'),
+          'Dimensi': extractField(cleanText, 'Dimensi'),
+          'Qty': extractField(cleanText, 'Qty'),
+          'Country of Origin': extractField(cleanText, 'Country of Origin'),
+          'Delivery Time': extractField(cleanText, 'Delivery Time')
+        };
+
+        dataset.push(rowData);
+        renderTable();
+        rawTextEl.value = '';
+        resultSection.classList.remove('hidden');
+      } catch (err) {
+        showError('Gagal memproses pesan: ' + err.message);
+      }
+    });
+
+    function renderTable() {
+      tableBody.innerHTML = '';
+      dataset.forEach((data, index) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-cyan-500/[0.04] transition duration-150 group';
+        tr.innerHTML = `
+          <td class="p-3.5 text-slate-500 font-mono group-hover:text-cyan-400">${index + 1}</td>
+          <td class="p-3.5 font-bold text-white tracking-wide">${escapeHtml(data['Nama'])}</td>
+          <td class="p-3.5 text-slate-300">${escapeHtml(data['Perusahaan'])}</td>
+          <td class="p-3.5 text-slate-300">${escapeHtml(data['Kota'])}</td>
+          <td class="p-3.5 text-cyan-400/90">${escapeHtml(data['Email'])}</td>
+          <td class="p-3.5 font-semibold text-emerald-400 bg-emerald-500/5">${escapeHtml(data['Grade'])}</td>
+          <td class="p-3.5 text-slate-300">${escapeHtml(data['Dimensi'])}</td>
+          <td class="p-3.5 font-bold text-amber-300">${escapeHtml(data['Qty'])}</td>
+          <td class="p-3.5 text-slate-400">${escapeHtml(data['Country of Origin'])}</td>
+          <td class="p-3.5 text-slate-400">${escapeHtml(data['Delivery Time'])}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      recordCountEl.textContent = `${dataset.length} Data Tersimpan`;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '-';
+      return text.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      })[m]);
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorAlert.classList.remove('hidden');
+    }
+
+    btnClearInput.addEventListener('click', () => {
+      rawTextEl.value = '';
+      errorAlert.classList.add('hidden');
+    });
+
+    btnResetAll.addEventListener('click', () => {
+      if (confirm('Jangan asal pencet, nanti ilang jd LEMBOORR!')) {
+        dataset = [];
+        tableBody.innerHTML = '';
+        resultSection.classList.add('hidden');
+        recordCountEl.textContent = '0 Data Tersimpan';
+      }
+    });
+
+    // Copy ke clipboard TSV (Format Excel)
+    btnCopyExcel.addEventListener('click', () => {
+      if (dataset.length === 0) return;
+
+      const headerRow = HEADERS.join('\t');
+      const dataRows = dataset.map(row => HEADERS.map(h => row[h]).join('\t')).join('\n');
+      const fullText = headerRow + '\n' + dataRows;
+
+      navigator.clipboard.writeText(fullText).then(() => {
+        alert('Data berhasil disalin! Silakan langsung Paste (Ctrl+V) di Google Sheets atau Excel ya tod.');
+      });
+    });
+
+    // Unduh sebagai file CSV dengan konfirmasi pop-up
+    btnDownloadCsv.addEventListener('click', () => {
+      if (dataset.length === 0) {
+        showError('Belum ada data untuk diunduh.');
+        return;
+      }
+
+      const isConfirmed = confirm(`Lu udah yakin ingin mengunduh ${dataset.length} data ini dalam format CSV?`);
+      if (!isConfirmed) return;
+
+      const csvRows = [
+        HEADERS.join(','),
+        ...dataset.map(row => HEADERS.map(h => `"${(row[h] || '').replace(/"/g, '""')}"`).join(','))
+      ];
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `TiraSteel_Inquiry_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // Dummy sample button untuk ngetes cepat
+    btnSample.addEventListener('click', () => {
+      rawTextEl.value = `Halo! Selamat datang di Whatsapp Business Account PT Tira Austenite Tbk - Tira Steel Division.
+
+Ada yang dapat kami bantu? mohon lengkapi data diri terlebih dahulu ya pak/bu :
+
+Nama : Captain
+Perusahaan : PT Citra Bagus
+Kota : Cempaka Putih
+Email : soursally.com
+
+*Kebutuhan*
+Grade : SKD 11
+Dimensi : Tebal 50mm x Lebar 200mm x Panjang 300mm
+Qty : 2 Pcs
+Country of Origin : Japan
+Delivery Time : 1 Minggu
+
+Kami akan segera menghubungi, terima kasih telah menunggu. Have a nice day! 😊`;
+    });
+  </script>
+</body>
+</html>
